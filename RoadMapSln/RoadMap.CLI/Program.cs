@@ -28,18 +28,7 @@ while (!input!.Equals("Exit"))
     {
         try
         {
-            var status = operation["mark-".Length..];
-
-            var validationMessages = ValidateInputs(tasksService, arguments, status, out int id);
-            if (validationMessages?.Any() ?? false)
-            {
-                foreach (var validationMessage in validationMessages)
-                    Console.WriteLine(validationMessage);
-
-                continue;
-            }
-
-            tasksService.SetStatus(id, status);
+            MarkTask(tasksService, arguments, operation);
         }
         catch (Exception e)
         {
@@ -108,4 +97,17 @@ static void HandleAddUpdateDeleteOperations(TasksService tasksService, string[]?
             Console.WriteLine($"Invalid Operation: {operation}");
             break;
     }
+}
+
+static void MarkTask(TasksService tasksService, string[]? arguments, string operation)
+{
+    var status = operation["mark-".Length..];
+
+    var validationMessages = ValidateInputs(tasksService, arguments, status, out int id);
+
+    if (validationMessages?.Count == 0)
+        tasksService.SetStatus(1, status);
+
+    foreach (var validationMessage in validationMessages ?? Enumerable.Empty<string>())
+        Console.WriteLine(validationMessage);
 }
