@@ -1,10 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
-
 using RoadMap.CLI.TaskTracker;
-using System.Text;
+
 
 var tasksService = new TasksService();
-//var validOperations = tasksService.ValidateOpertion(input);
 
 var input = "";
 
@@ -15,51 +13,17 @@ while (!input!.Equals("Exit"))
     var arguments = input?.Split(" ");
 
     var operation = arguments?[0] ?? ""; // add,delete,update / mark-{} / list
-    if (!operation.StartsWith("mark") && !operation.StartsWith("list"))
+    if (tasksService.IsAddUpdateDeleteOperation(operation))
     {
         try
         {
-            switch (operation)
-            {
-                case "add":
-                    {
-                        var description = string.Join(" ", arguments[1..]);
-                        var message = tasksService.AddTask(description.Trim('"'));
-                        Console.WriteLine(message);
-                        break;
-                    }
-                case "update":
-                    {
-                        var description = string.Join(" ", arguments[2..]);
-
-                        if (int.TryParse(arguments[1], out var id))
-                            tasksService.UpdateTask(int.Parse(arguments[1]), description.Trim('"'));
-                        else
-                            Console.WriteLine($"Invalid id argument: {arguments[1]}");
-
-                        break;
-                    }
-                case "delete":
-                    {
-                        if (int.TryParse(arguments[1], out var id))
-                            tasksService.DeleteTask(id);
-                        else
-                            Console.WriteLine($"Invalid id argument: {arguments[1]}");
-                        break;
-                    }
-                default:
-                    Console.WriteLine($"Invalid Operation: {operation}");
-                    break;
-            }
+            HandleAddUpdateDeleteOperations(tasksService, arguments, operation);
         }
         catch (Exception e)
         {
             Console.WriteLine($"Error: {e.Message}");
-            continue;
         }
     }
-    // else if mark
-    // TODO:
     else if (operation.StartsWith("mark"))
     {
         try
@@ -80,12 +44,16 @@ while (!input!.Equals("Exit"))
         catch (Exception e)
         {
             Console.WriteLine($"Error: {e.Message}");
-            continue;
         }
     }
+    else if (operation.StartsWith("list"))
+    {
 
-    // TODO:
-    // else if list
+    }
+    else
+    {
+        Console.WriteLine($"Invalid operation: {operation}");
+    }
 }
 
 static List<string> ValidateInputs(TasksService tasksService, string[]? arguments, string status, out int id)
@@ -104,4 +72,40 @@ static List<string> ValidateInputs(TasksService tasksService, string[]? argument
         validationMessage.Add($"Invalid status: {status}");
 
     return validationMessage;
+}
+
+static void HandleAddUpdateDeleteOperations(TasksService tasksService, string[]? arguments, string operation)
+{
+    switch (operation)
+    {
+        case "add":
+            {
+                var description = string.Join(" ", arguments[1..]);
+                var message = tasksService.AddTask(description.Trim('"'));
+                Console.WriteLine(message);
+                break;
+            }
+        case "update":
+            {
+                var description = string.Join(" ", arguments[2..]);
+
+                if (int.TryParse(arguments[1], out var id))
+                    tasksService.UpdateTask(int.Parse(arguments[1]), description.Trim('"'));
+                else
+                    Console.WriteLine($"Invalid id argument: {arguments[1]}");
+
+                break;
+            }
+        case "delete":
+            {
+                if (int.TryParse(arguments[1], out var id))
+                    tasksService.DeleteTask(id);
+                else
+                    Console.WriteLine($"Invalid id argument: {arguments[1]}");
+                break;
+            }
+        default:
+            Console.WriteLine($"Invalid Operation: {operation}");
+            break;
+    }
 }

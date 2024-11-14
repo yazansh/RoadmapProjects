@@ -5,7 +5,7 @@ namespace RoadMap.CLI.TaskTracker
     public class TasksService
     {
         private readonly string[] _validStatuses = ["todo", "in-progress", "done"];
-        //public readonly string[] _validOperations = ["add", "update", "delete"];
+        public readonly string[] _validOperations = ["add", "update", "delete"];
         
         private readonly TasksFileManager _tasksFileManager;
 
@@ -15,10 +15,10 @@ namespace RoadMap.CLI.TaskTracker
             _tasksFileManager = new TasksFileManager();
         }
 
-        //public bool ValidateOpertion(string opertiona)
-        //{
-        //    return _validOperations.Contains(opertiona);
-        //}
+        public bool IsAddUpdateDeleteOperation(string opertiona)
+        {
+            return _validOperations.Contains(opertiona);
+        }
 
         public bool ValidationStatus(string status)
         {
