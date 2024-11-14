@@ -20,10 +20,10 @@ namespace RoadMap.CLI.TaskTracker
         //    return _validOperations.Contains(opertiona);
         //}
 
-        //public bool ValidationStatus(string status)
-        //{
-        //    return _validOperations.Contains(status);
-        //}
+        public bool ValidationStatus(string status)
+        {
+            return _validStatuses.Contains(status);
+        }
 
         public string AddTask(string description)
         {
@@ -48,11 +48,16 @@ namespace RoadMap.CLI.TaskTracker
             _tasksFileManager.DeleteTask(id);
         }
 
-        public List<Task> ListAllTasks(string status)
+        internal void SetStatus(int id, string status)
         {
-            if (!string.IsNullOrEmpty(status) && !_validStatuses.Contains(status)) throw new Exception($"Invalid status: {status}");
-
-            throw new NotImplementedException();
+            _tasksFileManager.SetStatus(id, status);
         }
+
+        //public List<Task> ListAllTasks(string status)
+        //{
+        //    if (!string.IsNullOrEmpty(status) && !_validStatuses.Contains(status)) throw new Exception($"Invalid status: {status}");
+
+        //    throw new NotImplementedException();
+        //}
     }
 }

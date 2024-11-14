@@ -69,5 +69,18 @@ namespace RoadMap.CLI.TaskTracker.Utils
 
             File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true }));
         }
+
+        internal void SetStatus(int id, string status)
+        {
+            var tasksText = File.ReadAllText(_tasksFilePath);
+
+            var tasks = JsonSerializer.Deserialize<List<Task>>(tasksText) ?? throw new Exception("Error while reading tasks from json file!");
+            var taskToUpdate = tasks.FirstOrDefault(t => t.Id.Equals(id)) ?? throw new Exception("Task Not found!");
+
+            taskToUpdate.Status = status;
+            taskToUpdate.UpdatedAt = DateTime.Now;
+
+            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true }));
+        }
     }
 }
