@@ -20,7 +20,7 @@ namespace RoadMap.CLI.TaskTracker
             return _validOperations.Contains(opertiona);
         }
 
-        public bool ValidationStatus(string status)
+        public bool ValidateStatus(string? status)
         {
             return _validStatuses.Contains(status);
         }
@@ -53,11 +53,9 @@ namespace RoadMap.CLI.TaskTracker
             _tasksFileManager.SetStatus(id, status);
         }
 
-        //public List<Task> ListAllTasks(string status)
-        //{
-        //    if (!string.IsNullOrEmpty(status) && !_validStatuses.Contains(status)) throw new Exception($"Invalid status: {status}");
-
-        //    throw new NotImplementedException();
-        //}
+        internal List<Task> GetTasks(string? status)
+        {
+            return _tasksFileManager.GetTasks(status);
+        }
     }
 }

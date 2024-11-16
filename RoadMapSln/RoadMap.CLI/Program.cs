@@ -8,44 +8,50 @@ var input = "";
 
 while (!input!.Equals("Exit"))
 {
-    input = Console.ReadLine();
-
-    var arguments = input?.Split(" ");
-
-    var operation = arguments?[0] ?? ""; // add,delete,update / mark-{} / list
-    if (tasksService.IsAddUpdateDeleteOperation(operation))
+    try
     {
-        try
+        input = Console.ReadLine();
+
+        var arguments = input?.Split(" ");
+        if (arguments == null) return;
+
+        var operation = arguments?[0] ?? ""; // add,delete,update / mark-{} / list
+        if (tasksService.IsAddUpdateDeleteOperation(operation))
         {
-            HandleAddUpdateDeleteOperations(tasksService, arguments, operation);
+            HandleAddUpdateDeleteOperations(tasksService, arguments!, operation);
         }
-        catch (Exception e)
+        else if (operation.StartsWith("mark"))
         {
-            Console.WriteLine($"Error: {e.Message}");
+            MarkTask(tasksService, arguments!, operation);
+        }
+        else if (operation.StartsWith("list"))
+        {
+            ListTasks(tasksService, arguments!);
+        }
+        else
+        {
+            Console.WriteLine($"Invalid operation: {operation}");
         }
     }
-    else if (operation.StartsWith("mark"))
+    catch (Exception e)
     {
-        try
-        {
-            MarkTask(tasksService, arguments, operation);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Error: {e.Message}");
-        }
-    }
-    else if (operation.StartsWith("list"))
-    {
-
-    }
-    else
-    {
-        Console.WriteLine($"Invalid operation: {operation}");
+        Console.WriteLine($"Error: {e.Message}");
     }
 }
 
-static List<string> ValidateInputs(TasksService tasksService, string[]? arguments, string status, out int id)
+static List<string> ValidateListInputs(TasksService tasksService, string[] arguments, out string? status)
+{
+    var validationMessage = new List<string>();
+
+    status = arguments?.Length > 1 ? arguments[1] : null;
+
+    if (!string.IsNullOrEmpty(status) && !tasksService.ValidateStatus(status))
+        validationMessage.Add($"Invalid status: {status}");
+
+    return validationMessage;
+}
+
+static List<string> ValidateInputs(TasksService tasksService, string[] arguments, string status, out int id)
 {
     var validationMessage = new List<string>();
 
@@ -57,13 +63,13 @@ static List<string> ValidateInputs(TasksService tasksService, string[]? argument
     if (!int.TryParse(idArgument, out id))
         validationMessage.Add($"Invalid id argument: {arguments?[1]}");
 
-    if (!tasksService.ValidationStatus(status))
+    if (!tasksService.ValidateStatus(status))
         validationMessage.Add($"Invalid status: {status}");
 
     return validationMessage;
 }
 
-static void HandleAddUpdateDeleteOperations(TasksService tasksService, string[]? arguments, string operation)
+static void HandleAddUpdateDeleteOperations(TasksService tasksService, string[] arguments, string operation)
 {
     switch (operation)
     {
@@ -99,14 +105,26 @@ static void HandleAddUpdateDeleteOperations(TasksService tasksService, string[]?
     }
 }
 
-static void MarkTask(TasksService tasksService, string[]? arguments, string operation)
+static void MarkTask(TasksService tasksService, string[] arguments, string operation)
 {
     var status = operation["mark-".Length..];
 
     var validationMessages = ValidateInputs(tasksService, arguments, status, out int id);
 
     if (validationMessages?.Count == 0)
-        tasksService.SetStatus(1, status);
+        tasksService.SetStatus(id, status);
+
+    foreach (var validationMessage in validationMessages ?? Enumerable.Empty<string>())
+        Console.WriteLine(validationMessage);
+}
+
+static void ListTasks(TasksService tasksService, string[] arguments)
+{
+    var validationMessages = ValidateListInputs(tasksService, arguments, out var status);
+
+    if (validationMessages?.Count == 0)
+        foreach (var task in tasksService.GetTasks(status))
+            Console.WriteLine(task);
 
     foreach (var validationMessage in validationMessages ?? Enumerable.Empty<string>())
         Console.WriteLine(validationMessage);

@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace RoadMap.CLI.TaskTracker.Utils
 {
@@ -9,25 +7,17 @@ namespace RoadMap.CLI.TaskTracker.Utils
     {
 
         private static readonly string _tasksFilePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\tasks.txt";
-        //private static int _id = 0;
+        private static readonly JsonSerializerOptions options = new() { WriteIndented = true };
 
         public TasksFileManager()
         {
             if (!File.Exists(_tasksFilePath))
-            {
                 File.Create(_tasksFilePath);
-                //var tasksJson = JsonSerializer.Serialize(new List<Task>());
-                //File.WriteAllText(_tasksFilePath, tasksJson);
-            }
-
         }
 
         public Task AddTask(string desciprtions)
         {
-            var tasksText = File.ReadAllText(_tasksFilePath);
-            var tasks = !string.IsNullOrEmpty(tasksText) ?
-                JsonSerializer.Deserialize<List<Task>>(tasksText) ?? throw new Exception("Error while reading tasks from json file!")
-                : new List<Task>();
+            var tasks = GetTasksInternal();
 
             var latestId = tasks.LastOrDefault()?.Id ?? 0;
 
@@ -36,7 +26,7 @@ namespace RoadMap.CLI.TaskTracker.Utils
             
             tasks.Add(task);
 
-            var tasksSerialized = JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true });
+            var tasksSerialized = JsonSerializer.Serialize(tasks, options);
 
 
             File.WriteAllText(_tasksFilePath, tasksSerialized);
@@ -46,41 +36,55 @@ namespace RoadMap.CLI.TaskTracker.Utils
 
         public void UpdateTask(int id, string description)
         {
-            var tasksText = File.ReadAllText(_tasksFilePath);
+            var tasks = GetTasksInternal();
 
-            var tasks = JsonSerializer.Deserialize<List<Task>>(tasksText) ?? throw new Exception("Error while reading tasks from json file!");
             var taskToUpdate = tasks.FirstOrDefault(t => t.Id.Equals(id)) ?? throw new Exception("Task Not found!");
             
             taskToUpdate.Description = description;
             taskToUpdate.UpdatedAt = DateTime.Now;
 
-            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true }));
+            
+            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, options));
         }
 
 
         public void DeleteTask(int id)
         {
-            var tasksText = File.ReadAllText(_tasksFilePath);
-            
-            var tasks = JsonSerializer.Deserialize<List<Task>>(tasksText) ?? throw new Exception("Error while reading tasks from json file!");
+            var tasks = GetTasksInternal();
+
             var tasksToDelete = tasks.FirstOrDefault(task => task.Id.Equals(id)) ?? throw new Exception("Task Not found!");
 
             tasks.Remove(tasksToDelete);
 
-            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, options));
         }
 
-        internal void SetStatus(int id, string status)
+        public void SetStatus(int id, string status)
         {
-            var tasksText = File.ReadAllText(_tasksFilePath);
-
-            var tasks = JsonSerializer.Deserialize<List<Task>>(tasksText) ?? throw new Exception("Error while reading tasks from json file!");
+            var tasks = GetTasksInternal();
             var taskToUpdate = tasks.FirstOrDefault(t => t.Id.Equals(id)) ?? throw new Exception("Task Not found!");
 
             taskToUpdate.Status = status;
             taskToUpdate.UpdatedAt = DateTime.Now;
 
-            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(_tasksFilePath, JsonSerializer.Serialize(tasks, options));
+        }
+
+        public List<Task> GetTasks(string? status)
+        {
+            var tasks = GetTasksInternal();
+
+            if (string.IsNullOrEmpty(status)) return tasks;
+
+            return tasks.Where(t => t.Status == status).ToList();
+        }
+
+        private static List<Task> GetTasksInternal()
+        {
+            var tasksText = File.ReadAllText(_tasksFilePath);
+
+            var tasks = JsonSerializer.Deserialize<List<Task>>(tasksText) ?? throw new Exception("Error while reading tasks from json file!");
+            return tasks;
         }
     }
 }
